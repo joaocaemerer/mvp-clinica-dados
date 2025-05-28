@@ -13,7 +13,7 @@ if uploaded_file:
     df = pd.read_csv(uploaded_file, parse_dates=['data'])
 
     st.subheader("🔍 Dados carregados")
-    st.write(df.head())
+    st.write(df)
 
     # Filtros
     especialidades = df["especialidade"].unique()
