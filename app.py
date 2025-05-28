@@ -7,6 +7,7 @@ st.set_page_config(page_title="Painel Clínico Avançado", layout="wide")
 st.title("🏥 Painel Inteligente para Clínicas de Saúde")
 
 uploaded_file = st.file_uploader("📁 Envie um CSV com atendimentos detalhados", type=["csv"])
+api_key = st.text_input("🔑 Informe sua chave da OpenAI", type="password")
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file, parse_dates=['data'])
@@ -47,30 +48,32 @@ if uploaded_file:
     st.subheader("🧠 Geração de resumo com IA")
 
     if st.button("Gerar resumo com IA"):
-        # Dados de entrada para IA
-        resumo = (
-            f"- Total de atendimentos: {total_atendimentos}\n"
-            f"- Receita total: R$ {receita_total:,.2f}\n"
-            f"- Duração média: {media_duracao:.1f} minutos\n"
-            f"- Período: de {df['data'].min().date()} a {df['data'].max().date()}\n"
-        )
+        if not api_key:
+            st.error("⚠️ Informe sua chave da OpenAI.")
+        else:
+            openai.api_key = api_key
+            resumo = (
+                f"- Total de atendimentos: {total_atendimentos}\n"
+                f"- Receita total: R$ {receita_total:,.2f}\n"
+                f"- Duração média: {media_duracao:.1f} minutos\n"
+                f"- Período: de {df['data'].min().date()} a {df['data'].max().date()}\n"
+            )
+            prompt = (
+                "Você é um assistente de BI para clínicas de saúde. Gere um resumo claro, direto e estratégico com base nesses dados:\n"
+                + resumo
+            )
 
-        openai.api_key = st.secrets["OPENAI_API_KEY"]
-        prompt = (
-            "Você é um assistente de BI para clínicas de saúde. Gere um resumo claro, direto e estratégico com base nesses dados:\n"
-            + resumo
-        )
-
-        resposta = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "Você é um assistente de dados para gestores de clínicas."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-
-        st.success("Resumo gerado pela IA:")
-        st.write(resposta['choices'][0]['message']['content'])
-
+            try:
+                resposta = openai.ChatCompletion.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": "Você é um assistente de dados para gestores de clínicas."},
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                st.success("Resumo gerado pela IA:")
+                st.write(resposta['choices'][0]['message']['content'])
+            except Exception as e:
+                st.error(f"Erro ao gerar resumo com IA: {str(e)}")
 else:
     st.info("🔄 Envie um CSV com as colunas: data, atendimentos, especialidade, tipo_atendimento, duracao_media_minutos, receita_total.")
