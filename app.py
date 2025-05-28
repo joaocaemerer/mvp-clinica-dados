@@ -65,7 +65,7 @@ if uploaded_file:
 
             try:
                 response = client.chat.completions.create(
-                    model="gpt-4",
+                    model="o4-mini",
                     messages=[
                         {"role": "system", "content": "Você é um assistente de dados para gestores de clínicas."},
                         {"role": "user", "content": prompt}
