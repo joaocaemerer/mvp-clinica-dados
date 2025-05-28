@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import openai
+from openai import OpenAI
 import plotly.express as px
 
 st.set_page_config(page_title="Painel Clínico Avançado", layout="wide")
@@ -51,7 +51,7 @@ if uploaded_file:
         if not api_key:
             st.error("⚠️ Informe sua chave da OpenAI.")
         else:
-            openai.api_key = api_key
+            client = OpenAI(api_key=api_key)
             resumo = (
                 f"- Total de atendimentos: {total_atendimentos}\n"
                 f"- Receita total: R$ {receita_total:,.2f}\n"
@@ -64,7 +64,7 @@ if uploaded_file:
             )
 
             try:
-                resposta = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-4",
                     messages=[
                         {"role": "system", "content": "Você é um assistente de dados para gestores de clínicas."},
@@ -72,8 +72,8 @@ if uploaded_file:
                     ]
                 )
                 st.success("Resumo gerado pela IA:")
-                st.write(resposta['choices'][0]['message']['content'])
+                st.write(response.choices[0].message.content)
             except Exception as e:
                 st.error(f"Erro ao gerar resumo com IA: {str(e)}")
-else:
-    st.info("🔄 Envie um CSV com as colunas: data, atendimentos, especialidade, tipo_atendimento, duracao_media_minutos, receita_total.")
+    else:
+        st.info("🔄 Envie um CSV com as colunas: data, atendimentos, especialidade, tipo_atendimento, duracao_media_minutos, receita_total.")
